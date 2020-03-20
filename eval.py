@@ -9,7 +9,7 @@ import os
 jt.flags.use_cuda = 1
 
 # Parameters
-data_folder = '/home/storage/zwy/jitcode/object_detection/ssd/dataset/'
+data_folder = 'dataset/'
 keep_difficult = True
 batch_size = 47
 pp = PrettyPrinter()

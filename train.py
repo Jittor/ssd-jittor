@@ -15,7 +15,7 @@ def setseed(seed):
     np.random.seed(seed)
 
 from tensorboardX import SummaryWriter
-exp_id = "7"
+exp_id = "10"
 writer = SummaryWriter('tensorboard/' + exp_id) 
 
 # Data parameters
@@ -29,7 +29,7 @@ iterations = 120000  # 一共要训的轮数
 decay_lr_at = [80000, 100000]  # 在这些轮的时候学习率乘以0.1
 start_epoch = 0  # 开始epoch
 print_freq = 1  # train的时候，多少个iter打印一次信息
-lr = 1e-3  # 学习率
+lr = 3e-4  # 学习率
 momentum = 0.9  # SGD的momentum
 weight_decay = 5e-4  # SGD的weight_decay
 grad_clip = 1  # 设置是否要把梯度clamp到[-grad_clip, grad_clip]，如果是None则不clip

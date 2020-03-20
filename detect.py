@@ -11,7 +11,7 @@ import os
 jt.flags.use_cuda = 1
 
 # Load model checkpoint
-experiment_id = "167" # set your experiment id
+experiment_id = "pretrain_model" # set your experiment id
 model_path = os.path.join('tensorboard', experiment_id, 'model_best.pkl')
 params = pickle.load(open(model_path, "rb"))
 model = SSD300(21)

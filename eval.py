@@ -15,8 +15,8 @@ batch_size = 47
 pp = PrettyPrinter()
 
 # Define model & Load parameters
-experiment_id = "167"
-model_path = os.path.join('/home/storage/zwy/jitcode/object_detection/np_ssd/tensorboard3', experiment_id, 'model_best.pkl')
+experiment_id = "pretrain_model"
+model_path = os.path.join('tensorboard', experiment_id, 'model_best.pkl')
 params = pickle.load(open(model_path, "rb"))
 model = SSD300(21)
 model.load_parameters(params)

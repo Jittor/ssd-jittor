@@ -15,11 +15,11 @@ def setseed(seed):
     np.random.seed(seed)
 
 from tensorboardX import SummaryWriter
-exp_id = "10"
+exp_id = "1"
 writer = SummaryWriter('tensorboard/' + exp_id) 
 
 # Data parameters
-data_folder = '/home/storage/zwy/jitcode/object_detection/ssd/dataset/'
+data_folder = 'dataset/'
 keep_difficult = True # 是否保留那些比较难检测的物体
 n_classes = len(label_map)
 

@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 from utils import random_crop, random_bright, random_swap, random_contrast, random_saturation, random_hue, random_flip, random_expand
 import random
-from pdb import set_trace as st
 
 class PascalVOCDataset(Dataset):
     def __init__(self, data_folder, split, keep_difficult=False, batch_size=1, shuffle=False, data_argu=False):

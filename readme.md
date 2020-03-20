@@ -18,7 +18,7 @@
 
 4.训练命令：python3.7 train.py
 
-注：如果要进行多个实验，请自行修改exp_id
+注：如果要进行多个实验，请自行修改exp_id。若想在tensorboard里查看,请运行tensorboard --logdir tensorboard/
 
 # 模型测试
 

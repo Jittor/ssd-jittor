@@ -6,7 +6,7 @@
 
 2.执行python3.7 create_data_lists.py，会在dataset生成5个json文件。
 
-3.下载VGG16初始化模型init.pkl
+3.从[链接](https://cloud.tsinghua.edu.cn/f/50e24573693e4cd7b737/?dl=1)下载VGG16初始化模型init.pkl
 
 4.训练：python3.7 train.py
 

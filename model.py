@@ -234,7 +234,7 @@ class SSD300(nn.Module):
         self.base = VGGBase()
         self.aux_convs = AuxiliaryConvolutions()
         self.pred_convs = PredictionConvolutions(n_classes)
-        self.rescale_factors = jt.make_var([1, 512, 1, 1], init=jt.zeros)
+        self.rescale_factors = jt.zeros([1, 512, 1, 1])
         init.constant_(self.rescale_factors, 20)
         self.priors_cxcy = self.create_prior_boxes()
 

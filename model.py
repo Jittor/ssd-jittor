@@ -22,7 +22,7 @@ class CrossEntropyLoss(nn.Module):
         self.reduction = reduction
     
     def execute(self, input, target):
-        bs_idx = jt.array(range(input.shape[0]))
+        bs_idx = jt.array(list(range(input.shape[0])))
         ret = (- jt.log(nn.softmax(input, dim=1)))[bs_idx, target]
         if self.reduction != None:
             ret = jt.mean(ret) if self.reduction == 'mean' else jt.sum(ret)
@@ -414,7 +414,7 @@ class MultiBoxLoss(nn.Module):
             overlap_for_each_prior[prior_for_each_object] = 1.0
             label_for_each_prior = labels[i][object_for_each_prior]
             label_for_each_prior[overlap_for_each_prior < self.threshold] = 0
-            true_classes[i] = label_for_each_prior
+            true_classes[i] = label_for_each_prior.data
             true_locs[i] = cxcy_to_gcxgcy(xy_to_cxcy(boxes[i][object_for_each_prior]), self.priors_cxcy)
         true_classes = jt.array(true_classes).float32().stop_grad()
         true_locs = jt.array(true_locs).float32().stop_grad()
@@ -433,7 +433,7 @@ class MultiBoxLoss(nn.Module):
         conf_loss_pos = conf_loss_all * positive_priors
         conf_loss_neg = conf_loss_all * (1 - positive_priors)
         _, conf_loss_neg = conf_loss_neg.argsort(dim=1, descending=True)
-        hardness_ranks = jt.array(range(n_priors)).broadcast([conf_loss_neg.shape[0], conf_loss_neg.shape[1]], [0])
+        hardness_ranks = jt.array(list(range(n_priors))).broadcast([conf_loss_neg.shape[0], conf_loss_neg.shape[1]], [0])
         hard_negatives = hardness_ranks < n_hard_negatives.broadcast(hardness_ranks.shape, [1])
         conf_loss_hard_neg = conf_loss_neg * hard_negatives
         conf_loss = ((conf_loss_hard_neg.sum() + conf_loss_pos.sum()) / n_positives.float32().sum())

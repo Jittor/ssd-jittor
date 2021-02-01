@@ -8,6 +8,7 @@ import random
 
 class PascalVOCDataset(Dataset):
     def __init__(self, data_folder, split, keep_difficult=False, batch_size=1, shuffle=False, data_argu=False):
+        super().__init__()
         self.split = split.upper()
         assert self.split in {'TRAIN', 'TEST'}
         self.data_folder = data_folder

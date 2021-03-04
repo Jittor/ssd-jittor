@@ -24,19 +24,19 @@ keep_difficult = True # 是否保留那些比较难检测的物体
 n_classes = len(label_map)
 
 # Learning parameters
-batch_size = 20   # batch大小
+batch_size = 8   # batch大小
 iterations = 120000  # 一共要训的轮数
 decay_lr_at = [80000, 100000]  # 在这些轮的时候学习率乘以0.1
 start_epoch = 0  # 开始epoch
-print_freq = 1  # train的时候，多少个iter打印一次信息
-lr = 3e-4  # 学习率
+print_freq = 200  # train的时候，多少个iter打印一次信息
+lr = 1e-3  # 学习率
 momentum = 0.9  # SGD的momentum
 weight_decay = 5e-4  # SGD的weight_decay
-grad_clip = 1  # 设置是否要把梯度clamp到[-grad_clip, grad_clip]，如果是None则不clip
+grad_clip = None  # 设置是否要把梯度clamp到[-grad_clip, grad_clip]，如果是None则不clip
 best_mAP = 0. # 记录当前最高mAP
 train_loader = PascalVOCDataset(data_folder,
                                     split='train',
-                                    keep_difficult=keep_difficult, batch_size=batch_size, shuffle=False, data_argu=True)
+                                    keep_difficult=keep_difficult, batch_size=batch_size, shuffle=True, data_argu=False)
 length = len(train_loader) // batch_size # 一个batch的iters
 epochs = iterations // (len(train_loader) // 32) # 原论文batch_size为32跑了120000个iters，由此计算出epoches
 decay_lr_at = [it // (len(train_loader) // 32) for it in decay_lr_at] # 并计算出需要降lr的epochs集合
@@ -45,13 +45,24 @@ val_loader = PascalVOCDataset(data_folder,
                                 keep_difficult=keep_difficult, batch_size=batch_size, shuffle=False)
                                             
 model = SSD300(n_classes=n_classes)
-optimizer = nn.SGD(model.parameters(), lr, momentum=momentum, weight_decay=weight_decay)
+
+biases = list()
+not_biases = list()
+for param in model.parameters(): 
+    if param.requires_grad:
+        if param.name().endswith('.bias'):
+            biases.append(param)
+        else:
+            not_biases.append(param)
+
+optimizer = nn.SGD([{'params': biases, 'lr': 2 * lr}, {'params': not_biases}], lr, momentum=momentum, weight_decay=weight_decay)
 model.load_parameters(pickle.load(open("init.pkl", "rb")))
 criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy)
 
-setseed(19961107)
+# setseed(19961107)
 
 def main():
+    global exp_id
     for epoch in range(start_epoch, epochs):
         if epoch in decay_lr_at:
             optimizer.lr *= 0.1
@@ -62,7 +73,8 @@ def main():
             epoch=epoch)
         writer.add_scalar('Train/lr', optimizer.lr, global_step=epoch)
         if epoch % 5 == 0 and epoch > 0:
-            evaluate(test_loader=val_loader, model=model)
+            model.save(os.path.join("tensorboard", exp_id, 'model_last.pkl'))
+            # evaluate(test_loader=val_loader, model=model)
 
 
 def train(train_loader, model, criterion, optimizer, epoch):

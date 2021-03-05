@@ -413,12 +413,7 @@ class MultiBoxLoss(nn.Module):
             object_for_each_prior[prior_for_each_object] = range(n_objects)
             overlap_for_each_prior[prior_for_each_object] = 1.0
             label_for_each_prior = labels[i][object_for_each_prior]
-            # TODO: the original slice has bug
-            flags = (overlap_for_each_prior < self.threshold)
-            for idx in range(flags.shape[0]):
-                if flags[idx]:
-                    label_for_each_prior[idx] = 0
-            # label_for_each_prior[overlap_for_each_prior < self.threshold] = 0
+            label_for_each_prior[jt.array(overlap_for_each_prior < self.threshold)] = 0
             true_classes[i] = label_for_each_prior.data
             true_locs[i] = cxcy_to_gcxgcy(xy_to_cxcy(boxes[i][object_for_each_prior]), self.priors_cxcy)
         true_classes = jt.array(true_classes).float32().stop_grad()

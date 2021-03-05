@@ -28,7 +28,7 @@ batch_size = 8   # batch大小
 iterations = 120000  # 一共要训的轮数
 decay_lr_at = [80000, 100000]  # 在这些轮的时候学习率乘以0.1
 start_epoch = 0  # 开始epoch
-print_freq = 200  # train的时候，多少个iter打印一次信息
+print_freq = 50  # train的时候，多少个iter打印一次信息
 lr = 1e-3  # 学习率
 momentum = 0.9  # SGD的momentum
 weight_decay = 5e-4  # SGD的weight_decay
@@ -64,6 +64,9 @@ criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy)
 def main():
     global exp_id
     for epoch in range(start_epoch, epochs):
+        if epoch % 5 == 0:
+            model.save(os.path.join("tensorboard", exp_id, 'model_last.pkl'))
+            # evaluate(test_loader=val_loader, model=model)
         if epoch in decay_lr_at:
             optimizer.lr *= 0.1
         train(train_loader=train_loader,
@@ -72,16 +75,14 @@ def main():
             optimizer=optimizer,
             epoch=epoch)
         writer.add_scalar('Train/lr', optimizer.lr, global_step=epoch)
-        if epoch % 5 == 0 and epoch > 0:
-            model.save(os.path.join("tensorboard", exp_id, 'model_last.pkl'))
-            # evaluate(test_loader=val_loader, model=model)
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
     global best_loss, exp_id
     model.train()
-
+    
     for i, (images, boxes, labels, _) in enumerate(train_loader):
+        sta = time.time()
         images = jt.array(images)
 
         predicted_locs, predicted_scores = model(images)
@@ -91,7 +92,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         optimizer.step(loss)
         
         if i % print_freq == 0:
-            print(f'[Train] Experiment id: {exp_id} || Epochs: [{epoch}/{epochs}] || Iters: [{i}/{length}] || Loss: {loss} || Best mAP: {best_mAP}')
+            print(f'[Train] Experiment id: {exp_id} || Epochs: [{epoch}/{epochs}] || Iters: [{i}/{length}] || Loss: {loss} || Time cost: {time.time() - sta} || Best mAP: {best_mAP}')
+            sta = time.time()
             writer.add_scalar('Train/Loss', loss.data[0], global_step=i + epoch * length)
             writer.add_scalar('Train/Loss_conf', conf_loss.data[0], global_step=i + epoch * length)
             writer.add_scalar('Train/Loss_loc', loc_loss.data[0], global_step=i + epoch * length)

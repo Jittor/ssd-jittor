@@ -21,12 +21,19 @@ class CrossEntropyLoss(nn.Module):
         self.ignore_index = ignore_index
         self.reduction = reduction
     
-    def execute(self, input, target):
-        bs_idx = jt.array(list(range(input.shape[0])))
-        ret = (- jt.log(nn.softmax(input, dim=1)))[bs_idx, target]
-        if self.reduction != None:
-            ret = jt.mean(ret) if self.reduction == 'mean' else jt.sum(ret)
-        return ret
+    def execute(self, output, target):
+        if len(output.shape) == 4:
+            c_dim = output.shape[1]
+            output = output.transpose((0, 2, 3, 1))
+            output = output.reshape((-1, c_dim))
+        target = target.reshape((-1, ))
+        target = target.broadcast(output, [1])
+        target = target.index(1) == target
+        
+        output = output - output.max([1], keepdims=True)
+        loss = output.exp().sum(1).log()
+        loss = loss - (output*target).sum(1)
+        return loss
 
 class VGGBase(nn.Module):
     """ VGG base convolutions to produce lower-level feature maps. """
@@ -384,7 +391,7 @@ class MultiBoxLoss(nn.Module):
         self.neg_pos_ratio = neg_pos_ratio
         self.alpha = alpha
         self.smooth_l1 = L1Loss(reduction='sum')
-        self.cross_entropy = CrossEntropyLoss(reduce=False, reduction=None)
+        self.cross_entropy = CrossEntropyLoss()
 
     def execute(self, predicted_locs, predicted_scores, boxes, labels):
         """ Forward propagation.
@@ -423,7 +430,7 @@ class MultiBoxLoss(nn.Module):
            (predicted_locs * positive_priors.broadcast([1,1,4], [2])),  
            (true_locs * positive_priors.broadcast([1,1,4], [2]))
         )
-        loc_loss /= (positive_priors.float32().sum() * 4)
+        loc_loss /= (positive_priors.float32().sum() * 4 + 1e-5)
         n_positives = positive_priors.float32().sum(1)
         n_hard_negatives = self.neg_pos_ratio * n_positives
         conf_loss_all = self.cross_entropy(
@@ -436,5 +443,5 @@ class MultiBoxLoss(nn.Module):
         hardness_ranks = jt.array(list(range(n_priors))).broadcast([conf_loss_neg.shape[0], conf_loss_neg.shape[1]], [0])
         hard_negatives = hardness_ranks < n_hard_negatives.broadcast(hardness_ranks.shape, [1])
         conf_loss_hard_neg = conf_loss_neg * hard_negatives
-        conf_loss = ((conf_loss_hard_neg.sum() + conf_loss_pos.sum()) / n_positives.float32().sum())
+        conf_loss = ((conf_loss_hard_neg.sum() + conf_loss_pos.sum()) / (n_positives.float32().sum() + + 1e-5))
         return (conf_loss + (self.alpha * loc_loss)), conf_loss, loc_loss
